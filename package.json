@@ -1,0 +1,1 @@
+{"name":"com.phonegap.helloworld","version":"1.0.0","scripts":{"test":"echo \"Error: no test specified\" && exit 1"},"displayName":"helloworld","devDependencies":{"phonegap-plugin-push":"~1.8.0"},"cordova":{"plugins":{"phonegap-plugin-push":{"SENDER_ID":"XXXXXXX"},"cordova-support-google-services":{},"cordova-plugin-whitelist":{}}},"dependencies":{"cordova-browser":"^6.0.0"}}
