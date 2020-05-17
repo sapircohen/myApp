@@ -83,7 +83,16 @@
 //rides list in statuses radio buttons instead select
 //phone open pat list
 
-
+var firebaseConfig = {
+    apiKey: "AIzaSyAHP5sM11l8_bgnoaA8Th2qb9hbNbmZ3lg",
+    authDomain: "r2r-push.firebaseapp.com",
+    databaseURL: "https://r2r-push.firebaseio.com",
+    projectId: "r2r-push",
+    storageBucket: "r2r-push.appspot.com",
+    messagingSenderId: "234437974144",
+    appId: "1:234437974144:web:bc2592b6b8d8ba8d9bee65",
+    measurementId: "G-YVYGGHC28N"
+  };
 
 Settings = {};
 Settings.version = '1.9.4';
@@ -92,20 +101,68 @@ domain = '';
 currentPatientName = '';
 currentPatientPhone = '';
 
-
-function defaultServerDomain() {
+function handleServiceWorker(){
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", function() {
-          navigator.serviceWorker
-            .register("./serviceWorker.js")
-            .then(res=>console.log(res))
-            .catch(err => console.log("service worker not registered", err))
+            navigator.serviceWorker
+                .register("./serviceWorker.js")
+                .then(res=>console.log(res))
+                .catch(err => console.log("service worker not registered", err))
+            navigator.serviceWorker
+                .register("./firebase-messaging-sw.js")
+                .then(res=>console.log(res))
+                .catch(err => console.log("service worker not registered", err))
         })
-      }
+        handleFirebasePush();
+    }
+}
+
+function handleFirebasePush(){
+    
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+    messaging
+    .requestPermission()
+    .then(() => {
+        return messaging.getToken();
+    })
+    .then(token => {
+        console.log(token);
+    })
+    .catch(err => {
+        console.log("No permission to send push", err);
+    });
+    messaging.onMessage(payload => {
+        console.log("Message received. ", payload);
+        alertPushMsg2(payload)
+        const { title, ...options } = payload.notification;
+      });
+
+      messaging.onTokenRefresh(() => {
+        messaging.getToken().then((refreshedToken) => {
+          console.log('Token refreshed.');
+          // Indicate that the new Instance ID token has not yet been sent to the
+          // app server.
+          //setTokenSentToServer(false);
+          // Send Instance ID token to app server.
+          //sendTokenToServer(refreshedToken);
+          // ...
+        }).catch((err) => {
+          console.log('Unable to retrieve refreshed token ', err);
+          //showToken('Unable to retrieve refreshed token ', err);
+        });
+      });
+    
+}
+
+function defaultServerDomain() {
+    handleServiceWorker();
+    //enablePush();
     if (localStorage.domain) {
         domain = localStorage.domain;
 
     }
+ 
     else {
         if (window.location.href.includes('http')) {
             domain = 'https://roadtorecovery.org.il/prod/Road%20to%20Recovery/pages/';
@@ -114,6 +171,7 @@ function defaultServerDomain() {
             domain = '..';
         }
     }
+
 }
 defaultServerDomain();
 
@@ -3036,24 +3094,40 @@ function showAreas() {
 }
 
 function enablePush(){
-        push = PushNotification.init({
-            android: {
-                //senderID: "148075927844",
-                forceShow: true // this identifies your application
-                // it must be identical to what appears in the
-                // config.xml
+    console.log('calling push init');
+        var push = PushNotification.init({
+            "android": {
+                "senderID": "XXXXXXXX"
             },
-            browser: {
+            "browser": {
                 pushServiceURL: 'http://push.api.phonegap.com/v1/push'
             },
-            ios: {
-                alert: "true",
-                badge: "true",
-                sound: "true",
-                fcmSandBox: false
+            "ios": {
+                "sound": true,
+                "vibration": true,
+                "badge": true
             },
-            windows: {}
+            "windows": {}
         });
+        console.log('after init');
+        // push = PushNotification.init({
+        //     android: {
+        //         //senderID: "148075927844",
+        //         forceShow: true // this identifies your application
+        //         // it must be identical to what appears in the
+        //         // config.xml
+        //     },
+        //     browser: {
+        //         pushServiceURL: 'http://push.api.phonegap.com/v1/push'
+        //     },
+        //     ios: {
+        //         alert: "true",
+        //         badge: "true",
+        //         sound: "true",
+        //         fcmSandBox: false
+        //     },
+        //     windows: {}
+        // });
 
 
         push.on('registration', function (data) {
@@ -3290,7 +3364,44 @@ function alertPushMsg(data) {
         popupDialog(data.title, data.message, null, false, 'sendPushReaction');
     }
 }
+function alertPushMsg2(data) {
+    // data:
+    // data.data.gcm.notification.msgID: "14424"
+    // data.data.gcm.notification.rideID: "1"
+    // data.data.gcm.notification.status: "Canceled"
+    //data.data.gcm.notification.coldstart;
+    //data.data.gcm.notification.foreground;
+    //data.notification.title;
+    //data.notification.body
 
+    var message = '';
+    
+
+    userIDForPush_ = parseInt(localStorage.userId);
+    msgIDForPush_ = parseInt(data.data["gcm.notification.msgID"]);
+
+
+    if (data.data["gcm.notification.status"] == "Canceled") {
+        popupDialog(data.notification.title, data.notification.body, null, false, 'sendPushReaction');
+
+        if (window.location.href.toString().indexOf("#myRides") != -1) {
+            myRidesPrint = true;
+        }
+        getMyRidesList();
+    }
+    //Backup to primary
+    else if (data.data["gcm.notification.status"] == "PrimaryCanceled") {
+        //check first if this ride still needprimary driver
+
+        backupRide = myRides.filter(function (r) { return r.Id == data.data["gcm.notification.rideID"] })[0].rideId;
+        backupRideMSG = data.notification.body;
+        backupRideTITLE = data.notification.title;
+        isPrimaryStillCanceled();
+    }
+    else {
+        popupDialog(data.notification.title, data.notification.body, null, false, 'sendPushReaction');
+    }
+}
 function confirmPushSCB(data) {
 
 }

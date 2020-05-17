@@ -36,50 +36,50 @@ self.addEventListener("fetch", fetchEvent => {
       })
     )
   })
-  var messageChannel;
+  // var messageChannel = new MessageChannel();
   
-  self.addEventListener('push', function(event) {
-      // parse incoming message
-      var obj = {};
-      var pushData = {
-          image: '../icon.png',
-          additionalData: {}
-      };
-      if (event.data) {
-          obj = event.data.json();
-      }
+  // self.addEventListener('push', function(event) {
+  //     // parse incoming message
+  //     var obj = {};
+  //     var pushData = {
+  //         image: '../icon.png',
+  //         additionalData: {}
+  //     };
+  //     if (event.data) {
+  //         obj = event.data.json();
+  //     }
   
-      console.log(obj);
+  //     console.log(obj);
   
-      // convert to push plugin API
-      for (var key in obj) {
-          if (key === 'title') {
-              pushData.title = obj[key];
-          } else if (key === 'message' || key === 'body') {
-              pushData.message = obj[key];
-          } else if (key === 'count' || key === 'msgcnt' || key === 'badge') {
-              pushData.count = obj[key];
-          } else if (key === 'sound' || key === 'soundname') {
-              pushData.sound = obj[key];
-          } else if (key === 'image') {
-              pushData.image = obj[key];
-          } else {
-              pushData.additionalData[key] = obj[key];
-          }
-      }
+  //     // convert to push plugin API
+  //     for (var key in obj) {
+  //         if (key === 'title') {
+  //             pushData.title = obj[key];
+  //         } else if (key === 'message' || key === 'body') {
+  //             pushData.message = obj[key];
+  //         } else if (key === 'count' || key === 'msgcnt' || key === 'badge') {
+  //             pushData.count = obj[key];
+  //         } else if (key === 'sound' || key === 'soundname') {
+  //             pushData.sound = obj[key];
+  //         } else if (key === 'image') {
+  //             pushData.image = obj[key];
+  //         } else {
+  //             pushData.additionalData[key] = obj[key];
+  //         }
+  //     }
   
-      event.waitUntil(
-          self.registration.showNotification(pushData.title, {
-              body: pushData.message,
-              icon: pushData.image,
-              tag: 'simple-push-demo-notification-tag'
-          })
-      );
-  
-      messageChannel.ports[0].postMessage(pushData);
-  
-  });
-  
-  self.addEventListener('message', function(event) {
-      messageChannel = event;
-  });
+  //     event.waitUntil(
+  //         self.registration.showNotification(pushData.title, {
+  //             body: pushData.message,
+  //             icon: pushData.image,
+  //             tag: 'r2r'
+  //         })
+  //     );
+  //     const client = await self.clients.get(event.clientId);
+  //     if (!client) return;
+  //     client.postMessage({
+  //       msg: "Hey I just got a fetch from you!",
+  //       url: event.request.url
+  //     });
+  // });
+ 
